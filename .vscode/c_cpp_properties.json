@@ -1,0 +1,29 @@
+{
+    "configurations": [
+        {
+            "name": "ESP8266",
+            "includePath": [
+                "${workspaceFolder}/main",
+                "${IDF_PATH}/**",
+                "${IDF_PATH}/components/**",
+                "${workspaceFolder}/../../nanoAkka/**",
+                "${workspaceFolder}/../../Common/",
+                "${workspaceFolder}/../../ArduinoJson/src/",
+                "${IDF_PATH}/../xtensa-lx106-elf/**",
+                "${workspaceFolder}"
+            ],
+            "defines": [
+                "FREERTOS",
+                "MQTT_HOST=limero.ddns.net",
+                "MQTT_PORT=1883",
+                "CONFIG_FREERTOS_HZ=100"
+            ],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "clang-x64",
+            "forcedInclude": []
+        }
+    ],
+    "version": 4
+}

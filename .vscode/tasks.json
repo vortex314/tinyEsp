@@ -18,8 +18,7 @@
                 "focus": false,
                 "panel": "shared"
             },
-            "args": [
-                "flash"
+            "args": ["ota"
             ],
             "problemMatcher": {
                 "owner": "cpp",

@@ -27,7 +27,7 @@ extern "C" {
 #define QOS 0
 #define TIMEOUT 10000L
 
-
+#include <MqttOta.h>
 
 class MqttWifi :  public Mqtt  {
 
@@ -40,7 +40,8 @@ class MqttWifi :  public Mqtt  {
 		std::string _hostPrefix;
 		TimerSource _reportTimer;
 		TimerSource _keepAliveTimer;
-
+		std::string _lastTopic;
+		MqttOta mqttOta;
 	public:
 		Sink<bool,2> wifiConnected;
 		ValueSource<bool> connected;

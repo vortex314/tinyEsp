@@ -21,7 +21,7 @@
 #define TIMER_2 2
 //________________________________________________________________________
 //
-MqttWifi::MqttWifi(Thread& thread):Mqtt(thread),_reportTimer(thread,1,500,true), _keepAliveTimer(thread)
+MqttWifi::MqttWifi(Thread &thread) : Mqtt(thread), _reportTimer(thread, 1, 500, true), _keepAliveTimer(thread)
 {
     _lwt_message = "false";
     incoming.async(thread);
@@ -56,26 +56,31 @@ void MqttWifi::init()
 
     _reportTimer.start();
 
-    _reportTimer >> ([&](const TimerMsg& tm ){ mqttPublish(_lwt_topic.c_str(),"true");});
+    _reportTimer >> ([&](const TimerMsg &tm) { mqttPublish(_lwt_topic.c_str(), "true"); });
 
-    wifiConnected.async(thread(),[&](bool conn) {
-        INFO("WiFi %sconnected %d ",conn?"":"dis",conn);
-        if(conn) {
+    wifiConnected.async(thread(), [&](bool conn) {
+        INFO("WiFi %sconnected %d ", conn ? "" : "dis", conn);
+        if (conn)
+        {
             esp_mqtt_client_start(_mqttClient);
-        } else {
-            if(connected()) esp_mqtt_client_stop(_mqttClient);
+        }
+        else
+        {
+            if (connected())
+                esp_mqtt_client_stop(_mqttClient);
         }
     });
-    outgoing.async(thread(),[&](const MqttMessage& m) {
+    outgoing.async(thread(), [&](const MqttMessage &m) {
         std::string topic = _hostPrefix;
         topic += m.topic;
-        mqttPublish(topic.c_str(),m.message.c_str());
+        mqttPublish(topic.c_str(), m.message.c_str());
     });
     keepAliveTimer.interval(1000);
     keepAliveTimer.repeat(true);
-    keepAliveTimer >> [&](const TimerMsg& tm){
+    keepAliveTimer >> [&](const TimerMsg &tm) {
         INFO("");
-        if ( connected()) outgoing.on({_lwt_topic,"true"});
+        if (connected())
+            outgoing.on({_lwt_topic, "true"});
     };
 }
 //________________________________________________________________________
@@ -84,9 +89,10 @@ void MqttWifi::init()
 //________________________________________________________________________
 //
 
-void MqttWifi::onNext(const MqttMessage& m)
+void MqttWifi::onNext(const MqttMessage &m)
 {
-    if(connected()) {
+    if (connected())
+    {
         std::string topic = _hostPrefix;
         topic += m.topic;
         mqttPublish(topic.c_str(), m.message.c_str());
@@ -94,23 +100,26 @@ void MqttWifi::onNext(const MqttMessage& m)
 }
 //________________________________________________________________________
 //
-void MqttWifi::onNext(const TimerMsg& tm)
+void MqttWifi::onNext(const TimerMsg &tm)
 {
-    if(tm.id == TIMER_KEEP_ALIVE && connected() ) {
+    if (tm.id == TIMER_KEEP_ALIVE && connected())
+    {
         onNext({_lwt_topic.c_str(), "true"});
     }
 }
 //________________________________________________________________________
 //
-int MqttWifi::mqtt_event_handler(esp_mqtt_event_t* event)
+int MqttWifi::mqtt_event_handler(esp_mqtt_event_t *event)
 {
-    MqttWifi& me = *(MqttWifi*)event->user_context;
+    MqttWifi &me = *(MqttWifi *)event->user_context;
     std::string topics;
-//	esp_mqtt_client_handle_t client = event->client;
-//	int msg_id;
+    //	esp_mqtt_client_handle_t client = event->client;
+    //	int msg_id;
 
-    switch(event->event_id) {
-    case MQTT_EVENT_CONNECTED: {
+    switch (event->event_id)
+    {
+    case MQTT_EVENT_CONNECTED:
+    {
         INFO("MQTT_EVENT_CONNECTED to %s", me._address.c_str());
         INFO(" session : %d %d ", event->session_present, event->msg_id);
         esp_mqtt_client_publish(me._mqttClient, "src/limero/systems", Sys::hostname(), 0, 1, 0);
@@ -119,12 +128,13 @@ int MqttWifi::mqtt_event_handler(esp_mqtt_event_t* event)
         me.mqttSubscribe(topics.c_str());
         topics += "/#";
         me.mqttSubscribe(topics.c_str());
-        me.connected=true;
+        me.connected = true;
         break;
     }
-    case MQTT_EVENT_DISCONNECTED: {
+    case MQTT_EVENT_DISCONNECTED:
+    {
         INFO("MQTT_EVENT_DISCONNECTED");
-        me.connected=false;
+        me.connected = false;
         break;
     }
     case MQTT_EVENT_SUBSCRIBED:
@@ -136,44 +146,58 @@ int MqttWifi::mqtt_event_handler(esp_mqtt_event_t* event)
     case MQTT_EVENT_PUBLISHED:
         //			INFO("MQTT_EVENT_PUBLISHED, msg_id=%d", event->msg_id);
         break;
-    case MQTT_EVENT_DATA: {
+    case MQTT_EVENT_DATA:
+    {
         //		INFO("MQTT_EVENT_DATA");
-        bool busy = false;
-        if(!busy) {
-            busy = true;
-            static std::string topic;
-            static std::string data;
-            bool ready = true;
-            if(event->data_len != event->total_data_len) {
-                if(event->current_data_offset == 0) {
-                    topic = std::string(event->topic, event->topic_len);
-                    data = std::string(event->data, event->data_len);
-                    ready = false;
-                } else {
-                    data.append(event->data, event->data_len);
-                    if(data.length() != event->total_data_len) {
-                        ready = false;
-                    }
-                }
-            } else {
-                topic = std::string(event->topic, event->topic_len);
+        static std::string data;
+        if (event->current_data_offset == 0)
+        {
+            me._lastTopic = std::string(event->topic, event->topic_len);
+            me._lastTopic = me._lastTopic.substr(me._hostPrefix.length());
+        }
+        bool isOtaData = me._lastTopic.find("ota/data") != std::string::npos;
+        INFO(" MQTT_EVENT_DATA %s offset:%d length:%d total:%d ", me._lastTopic.c_str(), event->current_data_offset, event->data_len, event->total_data_len);
+        if (isOtaData)
+        {
+            if (event->current_data_offset == 0)
+            {
+                me.mqttOta.init();
+                me.mqttOta.initUpgrade();
+                me.mqttOta.writeUpgrade((uint8_t*)event->data, event->data_len);
+            }
+            else
+            {
+                me.mqttOta.writeUpgrade((uint8_t *)(event->data), event->data_len);
+            }
+            if (event->current_data_offset + event->data_len == event->total_data_len)
+            {
+                me.mqttOta.endUpgrade();
+                me.mqttOta.execUpgrade();
+            }
+        }
+        else
+        {
+            if (event->current_data_offset == 0)
+            {
                 data = std::string(event->data, event->data_len);
-                topic = topic.substr(me._hostPrefix.length());
             }
-            if(ready) {
-                INFO("MQTT RXD topic : %s , message  : %d", topic.c_str(), data.length());
-                me.incoming.on({topic, data});
+            else
+            {
+                data.append(event->data, event->data_len);
             }
-            busy = false;
-        } else {
-            WARN(" sorry ! MQTT reception busy ");
+            if (event->current_data_offset + event->data_len == event->total_data_len)
+            {
+                INFO("MQTT RXD topic : %s , message  : %d", me._lastTopic.c_str(), data.length());
+                me.incoming.on({me._lastTopic, data});
+            }
         }
         break;
     }
     case MQTT_EVENT_ERROR:
         WARN("MQTT_EVENT_ERROR");
         break;
-    default : {
+    default:
+    {
         WARN(" unknown MQTT event");
     }
     }
@@ -181,21 +205,31 @@ int MqttWifi::mqtt_event_handler(esp_mqtt_event_t* event)
 }
 //________________________________________________________________________
 //
-typedef enum { PING = 0, PUBLISH, PUBACK, SUBSCRIBE, SUBACK } CMD;
+typedef enum
+{
+    PING = 0,
+    PUBLISH,
+    PUBACK,
+    SUBSCRIBE,
+    SUBACK
+} CMD;
 //________________________________________________________________________
 //
-void MqttWifi::mqttPublish(const char* topic, const char* message)
+void MqttWifi::mqttPublish(const char *topic, const char *message)
 {
-    if(connected() == false) return;
-//	INFO("PUB : %s = %s", topic, message);
+    if (connected() == false)
+        return;
+    //	INFO("PUB : %s = %s", topic, message);
     int id = esp_mqtt_client_publish(_mqttClient, topic, message, 0, 0, 0);
-    if(id < 0) WARN("esp_mqtt_client_publish() failed.");
+    if (id < 0)
+        WARN("esp_mqtt_client_publish() failed.");
 }
 //________________________________________________________________________
 //
-void MqttWifi::mqttSubscribe(const char* topic)
+void MqttWifi::mqttSubscribe(const char *topic)
 {
     INFO("Subscribing to topic %s ", topic);
     int id = esp_mqtt_client_subscribe(_mqttClient, topic, 0);
-    if(id < 0) WARN("esp_mqtt_client_subscribe() failed.");
+    if (id < 0)
+        WARN("esp_mqtt_client_subscribe() failed.");
 }

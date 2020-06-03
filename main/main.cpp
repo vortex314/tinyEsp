@@ -106,7 +106,6 @@ TimerSource ts(mainThread, 1, 1000, true);
 Wifi wifi(mqttThread);
 MqttWifi mqtt(mqttThread);
 Poller poller(mqttThread);
-MqttOta mqttOta(mainThread);
 LedBlinker ledBlue(mainThread, 2, 1000);
 LedBlinker ledRed(mainThread, 16, UINT32_MAX);
 
@@ -159,12 +158,10 @@ extern "C" void app_main()
     systemAlive >> mqtt.toTopic<bool>("system/alive");
     poller(systemUptime)(systemHeap)(systemHostname)(systemBuild)(systemAlive);
     //------------------------------------------------------------ OTA
-    mqttOta.init();
-    mqtt.fromTopic<std::string>("ota/cmd") >> mqttOta.command;
-    mqtt.fromTopic<std::string>("ota/data") >> mqttOta.data;
+
 
     ledRed.blinkSlow.on(true);
-    INFO(" ESP8266_RTOS_SDK " __DATE__ " " __TIME__ "V: %x", esp_get_idf_version());
+    INFO(" ESP8266_RTOS_SDK " __DATE__ " " __TIME__ "V: %x ", esp_get_idf_version());
     ts >> [](const TimerMsg &tm) {
         INFO(" heap : %u min : %u ",
              esp_get_free_heap_size(),

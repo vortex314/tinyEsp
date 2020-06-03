@@ -1,32 +1,18 @@
 #include <MqttOta.h>
 
-MqttOta::MqttOta(Thread &thread) : Actor(thread), _data(OTA_BUF_SIZE)
+MqttOta::MqttOta()
 {
 }
 
 void MqttOta::init()
 {
-    command.async(thread(), [&](const std::string &cmd) {
-        if (cmd.compare("init") == 0) 
-            initUpgrade();
-        if (cmd.compare("end") == 0)
-            endUpgrade();
-        if (cmd.compare("exec") == 0)
-            execUpgrade();
-    });
-    data.async(thread(), [&](const std::string &dta) {
-        INFO("data:%d base64", dta.length());
-        Base64::decode(_data, dta);
-        INFO("data:%d bytes", _data.length());
-        if ( _state==INIT) writeUpgrade(_data);
-        else ERROR("OTA not init ");
-    });
+  
 }
 
 int MqttOta::initUpgrade()
 {
     INFO("initUpgrade");
-    _state=READY;
+    _state = READY;
     update_partition = (esp_partition_t *)esp_ota_get_next_update_partition(NULL);
     if (update_partition == NULL)
     {
@@ -41,25 +27,25 @@ int MqttOta::initUpgrade()
         ERROR("esp_ota_begin failed, error=%d", err);
         return err;
     }
-    _state=INIT;
+    _state = INIT;
     INFO("initUpgrade OK");
     return 0;
 }
 
-int MqttOta::writeUpgrade(Bytes &data)
+int MqttOta::writeUpgrade(uint8_t *data,uint32_t length)
 {
     INFO("writeUpgrade");
-    esp_err_t ota_write_err = esp_ota_write(update_handle, (const void *)data.data(), data.length());
+    esp_err_t ota_write_err = esp_ota_write(update_handle, (const void *)data, length);
     if (ota_write_err != ESP_OK)
         return ENOBUFS;
-    _lengthWritten += data.length();
+    _lengthWritten += length;
     INFO("Written image length %d", _lengthWritten);
     return 0;
 }
 
 int MqttOta::endUpgrade()
 {
-    _state=READY;
+    _state = READY;
     INFO("endUpgrade");
     esp_err_t ota_end_err = esp_ota_end(update_handle);
     if (ota_end_err != ESP_OK)
@@ -73,7 +59,7 @@ int MqttOta::endUpgrade()
 
 esp_err_t MqttOta::execUpgrade()
 {
-    _state=READY;
+    _state = READY;
     INFO("execUpgrade");
     esp_err_t err = esp_ota_set_boot_partition(update_partition);
     if (err != ESP_OK)

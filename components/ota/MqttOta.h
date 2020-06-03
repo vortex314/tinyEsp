@@ -1,3 +1,5 @@
+#ifndef MQTT_OTA_H
+#define MQTT_OTA_H
 #include <NanoAkka.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,22 +11,21 @@
 #include <Base64.h>
 #define OTA_BUF_SIZE 300
 
-class MqttOta : public Actor
+class MqttOta 
 {
     esp_partition_t* update_partition = 0;
     esp_ota_handle_t update_handle = 0;
-    Bytes _data;
     uint32_t _lengthWritten=0;
     typedef enum {READY,INIT,WRITE,END} State;
     State _state=READY;
 public:
-    Sink<std::string, 3> command;
-    Sink<std::string, 3> data;
-    MqttOta(Thread &thread);
+
+    MqttOta();
     void init();
     int initUpgrade();
-    int writeUpgrade(Bytes &data);
+    int writeUpgrade(uint8_t* data,uint32_t dataLength);
     int endUpgrade();
     void checkUpgrade();
     int execUpgrade();
 };
+#endif

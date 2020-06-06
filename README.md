@@ -1,4 +1,4 @@
-# tinyAkka for ESP8266
+# nanoAkka for ESP8266 based on ESP8266_RTOS_SDK
 Features :
 - Reactive programming model
 - OTA via mqtt at blazing speed : 1MB binary message via mosquitto_pub

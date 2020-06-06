@@ -20,7 +20,8 @@ Features
 - did I mention it is suprising fast ?
 - no cloud server needed, just use existing MQTT connection
 - no specific tools needed just use mosquitto_sub
-- command ```
+- command 
+```
 mosquitto_pub -h limero.ddns.net -t dst/$HOST/ota/data -q 1  -f build/tinyEsp.ota.bin
 ```
 - Data arrives guaranteed through QOS1 in MQTT client of ESP8266
@@ -51,4 +52,4 @@ mosquitto_pub -h limero.ddns.net -t dst/$HOST/ota/data -q 1  -f build/tinyEsp.ot
             }
         }
         else { /* threat all other Mqtt messages */ }
-        ```
+```

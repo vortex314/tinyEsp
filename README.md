@@ -1,7 +1,7 @@
 # nanoAkka for ESP8266 based on ESP8266_RTOS_SDK
 Features :
 - Reactive programming model
-- OTA via mqtt at blazing speed : 1MB binary message via mosquitto_pub
+- OTA via mqtt at blazing speed : 1MB binary message via mosquitto_pub, push takes 1 sec, flash reboot via OTA about 20 sec. 
 - Uses ideas from Actors, Streams
 - Properties can be saved to NVS, changed via MQTT 
 # BASE version

@@ -16,7 +16,6 @@ LedBlinker::LedBlinker(Thread& thr,uint32_t pin, uint32_t delay)
     });
     pulse.async(thread(),[&](const bool& b) {
         blinkTimer.repeat(false);
-        blinkTimer.interval(100);
         _ledGpio.write(0);
         _on=1;
         blinkTimer.start();

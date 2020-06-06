@@ -163,12 +163,8 @@ int MqttWifi::mqtt_event_handler(esp_mqtt_event_t *event)
             {
                 me.mqttOta.init();
                 me.mqttOta.initUpgrade();
-                me.mqttOta.writeUpgrade((uint8_t*)event->data, event->data_len);
             }
-            else
-            {
-                me.mqttOta.writeUpgrade((uint8_t *)(event->data), event->data_len);
-            }
+            me.mqttOta.writeUpgrade((uint8_t *)(event->data), event->data_len);
             if (event->current_data_offset + event->data_len == event->total_data_len)
             {
                 me.mqttOta.endUpgrade();

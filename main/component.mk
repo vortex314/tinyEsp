@@ -3,4 +3,4 @@
 #
 # (Uses default behaviour of compiling all source files in directory, adding 'include' to include path.)
 
-COMPONENT_ADD_INCLUDEDIRS= . ../../nanoAkka/main ../../Common
+COMPONENT_ADD_INCLUDEDIRS= . ../../nanoAkka/main ../../Common ../../nanoAkka/components/config

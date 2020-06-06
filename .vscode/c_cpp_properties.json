@@ -15,6 +15,7 @@
             ],
             "defines": [
                 "FREERTOS",
+                "TREESHAKER",
                 "ESP8266_IDF",
                 "MQTT_HOST=limero.ddns.net",
                 "MQTT_PORT=1883",

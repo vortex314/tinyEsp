@@ -34,12 +34,10 @@ int MqttOta::initUpgrade()
 
 int MqttOta::writeUpgrade(uint8_t *data,uint32_t length)
 {
-    INFO("writeUpgrade");
     esp_err_t ota_write_err = esp_ota_write(update_handle, (const void *)data, length);
     if (ota_write_err != ESP_OK)
         return ENOBUFS;
     _lengthWritten += length;
-    INFO("Written image length %d", _lengthWritten);
     return 0;
 }
 

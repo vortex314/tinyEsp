@@ -1,4 +1,4 @@
-HOST=ESP82-65048
+HOST=$1
 echo -n "init"
 #mosquitto_pub -h limero.ddns.net -t dst/$HOST/ota/cmd -m "\"init\""
 echo -n "Wait..."

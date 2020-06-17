@@ -59,7 +59,7 @@ void MqttWifi::init()
     _reportTimer >> ([&](const TimerMsg &tm) { mqttPublish(_lwt_topic.c_str(), "true"); });
 
     wifiConnected.async(thread(), [&](bool conn) {
-        INFO("WiFi %sconnected %d ", conn ? "" : "dis", conn);
+        INFO("WiFi %sconnected", conn ? "" : "dis");
         if (conn)
         {
             esp_mqtt_client_start(_mqttClient);

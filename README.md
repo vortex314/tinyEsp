@@ -53,3 +53,4 @@ mosquitto_pub -h limero.ddns.net -t dst/$HOST/ota/data -q 1  -f build/tinyEsp.ot
         }
         else { /* threat all other Mqtt messages */ }
 ```
+the esp_ota_begin takes most of the time, could maybe be done upfront. 

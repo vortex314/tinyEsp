@@ -12,8 +12,8 @@ SERIAL_PORT ?= /dev/tty$(TTY)
 ESPPORT = $(SERIAL_PORT)
 ESPBAUD=921600
 MONITORBAUD=115200
-CXXFLAGS +=  $(DEFINES) -I/home/lieven/workspace/ArduinoJson/src   -I../../nanoAkka/components/config
-CPPFLAGS +=  $(DEFINES) -I/home/lieven/workspace/ArduinoJson/src  -I../../nanoAkka/components/config
+CXXFLAGS +=  $(DEFINES) -I/home/lieven/workspace/ArduinoJson/src   -I../../nanoAkka/components/config -I$(IDF_PATH)/components/freertos/include/freertos
+CPPFLAGS +=  $(DEFINES) -I/home/lieven/workspace/ArduinoJson/src  -I../../nanoAkka/components/config -I$(IDF_PATH)/components/freertos/include/freertos
 
 PROJECT_NAME := tinyEsp
 
@@ -23,13 +23,13 @@ SHAKER1 :
 	touch main/main.cpp
 	make DEFINE=" -DTREESHAKER -DHOSTNAME=shaker1"
 
-SONOFF2 :
+SHAKER2 :
 	touch main/main.cpp
-	make DEFINE=" -DSONOFF -DHOSTNAME=sonoff2"
+	make DEFINE=" -DTREESHAKER -DHOSTNAME=shaker2"
 
 NODEMCU :
 	touch main/main.cpp
-	make DEFINE=" -DNODEMCU -DHOSTNAME=nodemcu"
+	make DEFINE=" -DNODEMCU"
 
 
 term:

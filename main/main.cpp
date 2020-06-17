@@ -11,7 +11,8 @@
 #include "freertos/task.h"
 #include "esp_system.h"
 #include "esp_spi_flash.h"
-
+#include <sys/time.h>
+#include <driver/uart.h>
 #include "NanoAkka.h"
 template <class T>
 class BiFlow : public Flow<T, T>
@@ -101,33 +102,30 @@ Log logger(256);
 Thread mainThread("main");
 Thread mqttThread("mqtt");
 TimerSource ts(mainThread, 1, 1000, true);
-//------------------------------------------------------ ACTORS
+//------------------------------------------------------ ACTORS BASE version
 Wifi wifi(mqttThread);
 MqttWifi mqtt(mqttThread);
 Poller poller(mqttThread);
+LedBlinker ledRed(mainThread, 16, 1000);
+//------------------------------------------------------ MQTT RELAY or TRIAC
 #ifdef TREESHAKER
 #include <ConfigFlow.h>
 
 DigitalOut &ledBlue = DigitalOut::create(2);
-LedBlinker ledRed(mainThread, 16, 1000);
 DigitalIn &button = DigitalIn::create(0);
 DigitalOut &relay = DigitalOut::create(15);
 TimerSource onTimer(mainThread, 1, 2000, false);
 ValueFlow<bool> relayOn(false);
 ConfigFlow<int> onTime("sonoff/onTime", 3000);
-
 #endif
-#ifdef NODEMCU
-
-#endif
-
+//------------------------------------------------------ BASE PROPERTIES
 ValueSource<std::string> systemBuild("NOT SET");
 ValueSource<std::string> systemHostname("NOT SET");
 ValueSource<bool> systemAlive = true;
 LambdaSource<uint32_t> systemHeap([]() { return Sys::getFreeHeap(); });
 LambdaSource<uint64_t> systemUptime([]() { return Sys::millis(); });
-#include <sys/time.h>
-#include <driver/uart.h>
+
+
 extern "C" void app_main()
 {
     uart_set_baudrate(UART_NUM_0, 115200);
@@ -154,6 +152,7 @@ extern "C" void app_main()
 #else
     wifi.init();
     mqtt.init();
+    ledRed.init();
     wifi.connected >> mqtt.wifiConnected;
     mqtt.connected >> poller.connected;
     mqtt.connected >> ledRed.blinkSlow;
@@ -178,14 +177,12 @@ extern "C" void app_main()
         INFO(" heap : %u min : %u ",
              esp_get_free_heap_size(),
              esp_get_minimum_free_heap_size());
-#ifdef TREESHAKER
-        ledRed.pulse();
-#endif
     };
 #ifdef TREESHAKER
-    ledRed.init();
     ledBlue.init();
     relay.init();
+    relay.write(0);
+    ledBlue.write(1);
     ledRed.blinkSlow.on(false);
     mqtt.topic<int>("shaker/shakeTime") == onTime;
     mqtt.topic<bool>("shaker/shake") == relayOn;
@@ -198,10 +195,7 @@ extern "C" void app_main()
     onTime >> [](const int &t) { if(t>0)  onTimer.interval(t); };
     poller(relayOn)(onTime);
 #endif
-#ifdef NODEMCU
-    ledBlue.init();
-    ledRed.init();
-#endif
+
     mainThread.start(); // wifi init fails if this doesn't end
     mqttThread.start();
 }

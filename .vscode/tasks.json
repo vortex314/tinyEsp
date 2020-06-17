@@ -18,7 +18,7 @@
                 "focus": false,
                 "panel": "shared"
             },
-            "args": ["SHAKER1","ota"],
+            "args": ["SHAKER2","ota"],
             "problemMatcher": {
                 "owner": "cpp",
                 "fileLocation": [
